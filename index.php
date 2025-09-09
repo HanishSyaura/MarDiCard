@@ -69,9 +69,14 @@ if (mysqli_num_rows($query2) == 0) {
         <div id="overlay" class="overlay">
             <div class="overlay-content">
                 <button id="toggle-content" class="toggle-button">
-                    <p>John</p>
-                    <p>Sarah</p>
-                    <p class="buka">Buka</p>
+                    <p>Hamka</p>
+                    <p>&</p>
+                    <p>Husna</p>
+                </button>
+                <button id="toggle-content" class="toggle-button">
+                    <p>Hanish</p>
+                    <p>&</p>
+                    <p>Najib</p>
                 </button>
             </div>
         </div>
