@@ -11,7 +11,7 @@
 body {
     position: relative;
     /*background: linear-gradient(to right, #24243e, #302b63, #0f0c29);*/
-    background: #F8F4FF;
+    background: #fffdf8;
     font-family: "Roboto", sans-serif;
     width: 100%;
     height: 100%;
@@ -27,7 +27,7 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #F8F4FF;
+    background: #fffdf8;
     transition: opacity 0.5s ease;
 }
 
@@ -306,11 +306,11 @@ section {
     # Intro
 ============================================================================================*/
 .card section.intro {
-    background: url(../images/intro2-bg.png), linear-gradient(to right, #F8F4FF, #f9fcff, #F8F4FF);
+    background: url(../images/intro2-bg.png), linear-gradient(to right, #fffdf8, #ffffff, #fffdf8);
     background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    min-height: 100vh;
+    background-size: contain;
+    background-position: top center;
+    min-height: 100%;
     z-index: 500;
     border-bottom: 1px solid rgb(195, 195, 195);
 }
@@ -371,7 +371,7 @@ section {
     justify-content: center;
     gap: 10px;
     padding: 50px 0px;
-    background: linear-gradient(to right, #F8F4FF, #f9fcff, #F8F4FF);
+    background: linear-gradient(to right, #fffdf8, #ffffff, #fffdf8);
     min-height: 100vh;
 }
 
@@ -852,7 +852,7 @@ section {
     border: 1px solid grey;
     /* background: linear-gradient(90deg, #E5BDF6, #D8DEDE) !important; */
     /* background: linear-gradient(to right, #24243e, #302b63, #0f0c29); */
-    background: #F8F4FF;
+    background: #fffdf8;
     cursor: pointer;
     gap: 10px;
 }
@@ -860,7 +860,7 @@ section {
 .card section.info .rsvp .beri-ucapan-button button:hover {
     /* background: linear-gradient(90deg, #E5BDF6, #D8DEDE) !important; */
     /* background: linear-gradient(to right, #24243e, #302b63, #0f0c29); */
-    background: #F8F4FF;
+    background: #fffdf8;
     opacity: 0.8;
 }
 
@@ -984,11 +984,11 @@ section {
     width: 250px;
     height: 40px;
     cursor: pointer;
-    background: #F8F4FF;
+    background: #fffdf8;
 }
 
 .toggle-menu .calendar .button button:hover {
-    background: #F8F4FF;
+    background: #fffdf8;
     opacity: 0.9;
 }
 
@@ -1039,11 +1039,11 @@ section {
     width: 180px;
     height: 35px;
     cursor: pointer;
-    background: #F8F4FF;
+    background: #fffdf8;
 }
 
 .toggle-menu .location .button button:hover {
-    background: #F8F4FF;
+    background: #fffdf8;
     opacity: 0.9;
 }
 
@@ -1088,11 +1088,11 @@ section {
     border-radius: 5px;
     gap: 5px;
     cursor: pointer;
-    background: #F8F4FF;
+    background: #fffdf8;
 }
 
 .toggle-menu .rsvp .button button:hover {
-    background: #F8F4FF;
+    background: #fffdf8;
     opacity: 0.9;
 }
 
@@ -1155,7 +1155,7 @@ section {
 .toggle-menu .contact .content .person .first-section .name span {
     font-size: 16px;
     font-family: 'Cormorant Garamond', serif;
-    color: #F8F4FF;
+    color: #fffdf8;
     font-weight: 700;
 }
 
@@ -1172,7 +1172,7 @@ section {
 }
 
 .toggle-menu .contact .content .person .second-section .bx {
-    color: #F8F4FF;
+    color: #fffdf8;
     font-size: 30px;
 }
 
@@ -1225,12 +1225,12 @@ section {
     border-radius: 5px;
     padding: 8px 6px;
     cursor: pointer;
-    background: #F8F4FF;
+    background: #fffdf8;
     gap: 5px;
 }
 
 .toggle-menu .ucapan-tetamu .button button:hover {
-    background: #F8F4FF;
+    background: #fffdf8;
     opacity: 0.9;
 }
 
@@ -1275,3 +1275,78 @@ section {
 /*============================================================================================
     # Image Carousel
 ============================================================================================*/
+
+.slideshow {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.slide.active {
+  opacity: 1;
+}
+
+.couple-img {
+  position: absolute;
+  bottom: 0;       /* Rapat dengan bawah page */
+  transform: translateX(50%); /* Betul-betul tengah */
+  max-height: 50vh; /* Supaya tak overflow, ikut tinggi screen */
+  width: auto;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.overlay-names {
+  position: absolute;
+  bottom: 55%;  /* Naikkan nama kat atas kepala pengantin sikit */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #333;   /* Tukar ikut background */
+  line-height:30px;
+  z-index: 2;
+  max-width: none;       /* jangan lock lebar */
+  white-space: nowrap;   /* paksa semua dalam 1 line */
+}
+
+.overlay-names .walimatul {
+  font-size: 50px;
+  font-style: italic;
+  margin-bottom: 30px;
+  font-family: "Great Vibes", cursive;
+}
+
+.overlay-names .n {
+    font-size: 16px;
+}
+
+.overlay-names h2 {
+  font-size: 24px;
+  margin: 0.2rem 0;
+  opacity: 0;
+  transform: translateY(-30px);
+  font-family:Georgia, 'Times New Roman', Times, serif ;
+  font-weight: 300;
+}
+
+@keyframes slideIn {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes nameIn {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.bismillah {
+    min-height: 100px;
+}

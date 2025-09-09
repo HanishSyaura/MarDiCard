@@ -511,3 +511,58 @@ document.getElementById("btn-tidak-hadir").onclick = function() {
 /** =====================================================
  *  Image Carousel
   ======================================================= */
+
+
+const slides = document.querySelectorAll('.slideshow .slide');
+let current = 0;
+
+function showSlide(index) {
+  slides.forEach(slide => slide.classList.remove('active'));
+  slides[index].classList.add('active');
+
+  const img = slides[index].querySelector('.couple-img');
+  const groom = slides[index].querySelector('.firstName');
+  const bride = slides[index].querySelector('.secondName');
+
+  // reset semua
+  [img, groom, bride].forEach(el => {
+    if (el) {
+      el.style.opacity = 0;
+      el.style.animation = 'none';
+    }
+  });
+
+  // gambar dulu
+  if (img) {
+    setTimeout(() => {
+      img.style.animation = 'slideIn 1.5s ease forwards';
+    }, 500);
+  }
+
+  // nama groom selepas gambar
+  if (groom) {
+    setTimeout(() => {
+      groom.style.animation = 'nameIn 1s ease forwards';
+    }, 2000);
+  }
+
+  // nama bride selepas groom
+  if (bride) {
+    setTimeout(() => {
+      bride.style.animation = 'nameIn 1s ease forwards';
+    }, 4000);
+  }
+}
+
+function nextSlide() {
+  current++;
+  if (current < slides.length) {
+    showSlide(current);
+    setTimeout(nextSlide, 10000); // buffer 1 min
+  }
+}
+
+// start
+showSlide(0);
+setTimeout(nextSlide, 10000);
+
