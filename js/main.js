@@ -221,18 +221,13 @@ function addAppleCalendar() {
  *  Location for Google and Waze
   ======================================================= */
 function openGoogleMaps() {
-    const latitude = 3.1575;  // Example latitude
-    const longitude = 101.7116;  // Example longitude
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`;
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=1.542054,103.7045034&travelmode=driving`;
 
     window.open(googleMapsUrl, "_blank");  // Open in a new tab
 }
 
 function openWaze() {
-    const latitude = 3.1575;  // Example latitude
-    const longitude = 101.7116;  // Example longitude
-    //const wazeUrl = `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
-    const wazeUrl = `waze://?ll=${latitude},${longitude}&navigate=yes`
+    const wazeUrl = `https://waze.com/ul?ll=1.542054,103.7045034&navigate=yes`;
 
     window.open(wazeUrl, "_blank");  // Open in a new tab
 }
@@ -245,7 +240,7 @@ function openWaze() {
     Contact
   ======================================================= */
 function openWhatsApp(phoneNumber) {
-    const message = "https://kad-jemputan-kahwin.vercel.app/\n\nHello, maaf menggangu. Saya ingin bertanyakan sesuatu berkenaan majlis perkahwinan ini.";
+    const message = "Salam. Saya ingin bertanyakan sesuatu berkenaan majlis perkahwinan ini Waie Hamka dan Hanish Syaura.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");  // Opens WhatsApp in a new tab
 }
@@ -416,45 +411,85 @@ const kehadiranBtn = document.getElementById("kehadiran-btn");
 
 
 /** =====================================================
- *  Handle Form
-  ======================================================= */
-// function submitUcapan() {
-//     document.getElementById("form-ucapan").submit();
-// }
-document.getElementById("form-ucapan").addEventListener("submit", function (event) {
-    event.preventDefault(); // Prevent the default form submission
+ *  UCAPAN FORM & FETCH ALL (Apps Script Version)
+ ======================================================= */
 
-    const form = document.getElementById("form-ucapan");
-    const formData = new FormData(form); // Collect the form data
-    const actionUrl = form.action; // Get the form's target URL
+const formUcapan = document.getElementById("form-ucapan");
+const messagesContainer = document.getElementById("messagesContainer");
 
-    fetch(actionUrl, {
-        method: "POST", // Use the POST method to submit data
-        body: formData, // Attach the FormData object
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.text(); // Process the response as text
-        } else {
-            throw new Error("Form submission failed"); // Handle errors
+// --- Function untuk render mesej dalam bubble ---
+function appendMessage(name, message, timestamp = null) {
+    const card = document.createElement("div");
+    card.classList.add("message-card"); // CSS bubble
+
+    if (!timestamp) {
+        timestamp = new Date().toLocaleTimeString("ms-MY", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    card.innerHTML = `
+        <div class="message-header">
+            <strong>${name}</strong> <span class="timestamp">${timestamp}</span>
+        </div>
+        <p>${message}</p>
+    `;
+    messagesContainer.prepend(card);
+}
+
+// --- Fetch semua ucapan dari Google Sheet ---
+function fetchMessages() {
+    // Guna google.script.run
+    google.script.run.withSuccessHandler(function(data){
+        messagesContainer.innerHTML = ""; // kosongkan dulu
+        if (data && Array.isArray(data)) {
+            data.forEach(msg => {
+                appendMessage(msg.name, msg.message, msg.timestamp);
+            });
         }
-    })
-    .then(result => {
-        // Display the success message in the success-menu
-        const successMenu = document.getElementById("success-menu");
-        successMenu.innerHTML = "<div class='success-message'><i class='bx bx-check'></i><p>Mesej anda berjaya dihantar!</p></div>";
-        successMenu.classList.add("open"); // Open the success menu
+    }).getUcapan(); // panggil Apps Script function
+}
 
-        // Close the ucapan menu after successful submission
-        closeMenu('ucapan-menu');
+// --- Jalankan fetch bila page load ---
+document.addEventListener("DOMContentLoaded", fetchMessages);
 
-        // Optionally reset the form
-        form.reset();
-    })
-    .catch(error => {
-        console.error("Error:", error); // Log any errors
-    });
+// --- Handler submit form ---
+formUcapan.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const name = formUcapan.querySelector("input[name='name']").value || "Anonymous";
+    const message = formUcapan.querySelector("textarea[name='message']").value.trim();
+
+    if (!message) {
+        alert("Sila masukkan ucapan anda!");
+        return;
+    }
+
+    // Hantar ke Apps Script
+    google.script.run.withSuccessHandler(function(res){
+        if(res.status === "success"){
+            appendMessage(name, message); // Papar live
+
+            // Success popup
+            const successMenu = document.getElementById("success-menu");
+            successMenu.innerHTML = "<div class='success-message'><i class='bx bx-check'></i><p>Mesej anda berjaya dihantar!</p></div>";
+            successMenu.classList.add("open");
+            setTimeout(() => {
+                successMenu.classList.remove("open");
+                successMenu.innerHTML = "";
+            }, 5000);
+
+            closeMenu("ucapan-menu"); // tutup modal
+            formUcapan.reset();
+        }
+    }).submitUcapan(name, message); // panggil Apps Script function
 });
+
+
+
+
+
+
+
+
 
 
 
