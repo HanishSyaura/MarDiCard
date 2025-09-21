@@ -413,16 +413,9 @@ const kehadiranBtn = document.getElementById("kehadiran-btn");
 const formUcapan = document.getElementById("form-ucapan");
 const messagesContainer = document.getElementById("messagesContainer");
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbym0JsG30PWXdHdTutVbdGzxALWNIjRj2m702DhLpGGz4V7agwNcKYMSqT5heHTq5ZW/exec"; // Web App URL
-
-function appendMessage(name, message, timestamp = null) {
+function appendMessage(name, message, timestamp) {
     const card = document.createElement("div");
     card.classList.add("message-card");
-
-    if (!timestamp) {
-        timestamp = new Date().toLocaleTimeString("ms-MY", { hour: "2-digit", minute: "2-digit" });
-    }
-
     card.innerHTML = `
         <div class="message-header">
             <strong>${name}</strong> <span class="timestamp">${timestamp}</span>
@@ -433,22 +426,21 @@ function appendMessage(name, message, timestamp = null) {
 }
 
 function fetchMessages() {
-    fetch(scriptURL + "?action=get")
+    fetch('php/messages.php')
         .then(res => res.json())
         .then(data => {
             messagesContainer.innerHTML = "";
-            if (data && Array.isArray(data.messages)) {
+            if (data.messages && Array.isArray(data.messages)) {
                 data.messages.forEach(msg => appendMessage(msg.name, msg.message, msg.timestamp));
             }
         })
-        .catch(err => console.error("Gagal fetch ucapan:", err));
+        .catch(err => console.error(err));
 }
 
 document.addEventListener("DOMContentLoaded", fetchMessages);
 
 formUcapan.addEventListener("submit", function(e){
     e.preventDefault();
-
     const name = formUcapan.querySelector("input[name='name']").value || "Anonymous";
     const message = formUcapan.querySelector("textarea[name='message']").value.trim();
 
@@ -461,72 +453,46 @@ formUcapan.addEventListener("submit", function(e){
     formData.append("name", name);
     formData.append("message", message);
 
-    fetch(scriptURL, { method: "POST", body: formData })
+    fetch('php/messages.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
             if (data.status === "success") {
-                appendMessage(name, message);
+                appendMessage(name, message, new Date().toLocaleTimeString());
                 formUcapan.reset();
                 closeMenu("ucapan-menu");
             } else {
-                alert("Gagal hantar ucapan, cuba lagi.");
+                alert(data.message || "Gagal hantar ucapan");
             }
         })
-        .catch(err => console.error("Error hantar ucapan:", err));
+        .catch(err => console.error(err));
 });
 
+// RSVP
+function incrementRSVP(type) {
+    const formData = new FormData();
+    formData.append("action", "increment");
+    formData.append("type", type);
 
-
-
-
-/** =====================================================
- *  Handle Kehadiran Count
-  ======================================================= */
-function incrementCount(endpoint, successMessage, iconClass, closeMenuId) {
-    fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'action=increment',
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error("Request failed");
-        }
-    })
-    .then(data => {
-        if (data.attend) {
-            // Display the success message
-            const successMenu = document.getElementById("success-menu");
-            successMenu.innerHTML = `<div class='success-message'><i class='${iconClass}'></i><p>${successMessage}</p></div>`;
-            successMenu.classList.add("open"); // Open the success menu
-
-            // Optionally close other menu
-            if (closeMenuId) {
-                closeMenu(closeMenuId); // Close the specified menu
+    fetch('php/rsvp.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                const successMenu = document.getElementById("success-menu");
+                if (type === "attend") {
+                    successMenu.innerHTML = "<p>Kami menantikan kedatangan anda!</p>";
+                } else {
+                    successMenu.innerHTML = "<p>Maaf, mungkin lain kali.</p>";
+                }
+                successMenu.classList.add("open");
             }
-        } else {
-            console.error("Increment count error:", data.error);
-            alert("Terjadi kesilapan: " + data.error);
-        }
-    })
-    .catch(error => {
-        console.error("AJAX error:", error);
-        alert("Error processing the request.");
-    });
+        });
 }
 
-// Attach the click event to the "Hadir" and "Tidak Hadir" buttons
-document.getElementById("btn-hadir").onclick = function() {
-    incrementCount('count_hadir.php', "Kami menantikan kedatangan anda!", 'bx bxs-wink-smile', 'rsvp-menu'); // Success message and optionally close RSVP menu
-};
+document.getElementById("btn-hadir").addEventListener("click", () => incrementRSVP("attend"));
+document.getElementById("btn-tidak-hadir").addEventListener("click", () => incrementRSVP("not_attend"));
 
-document.getElementById("btn-tidak-hadir").onclick = function() {
-    incrementCount('count_tidak_hadir.php', "Maaf, mungkin lain kali.", 'bx bxs-sad', 'rsvp-menu'); // Success message and optionally close RSVP menu
-};
 
 
 
