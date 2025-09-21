@@ -410,17 +410,14 @@ const kehadiranBtn = document.getElementById("kehadiran-btn");
 
 
 
-/** =====================================================
- *  UCAPAN FORM & FETCH ALL (Apps Script Version)
- ======================================================= */
-
 const formUcapan = document.getElementById("form-ucapan");
 const messagesContainer = document.getElementById("messagesContainer");
 
-// --- Function untuk render mesej dalam bubble ---
+const scriptURL = "https://script.google.com/macros/s/.../exec"; // Web App URL
+
 function appendMessage(name, message, timestamp = null) {
     const card = document.createElement("div");
-    card.classList.add("message-card"); // CSS bubble
+    card.classList.add("message-card");
 
     if (!timestamp) {
         timestamp = new Date().toLocaleTimeString("ms-MY", { hour: "2-digit", minute: "2-digit" });
@@ -435,23 +432,20 @@ function appendMessage(name, message, timestamp = null) {
     messagesContainer.prepend(card);
 }
 
-// --- Fetch semua ucapan dari Google Sheet ---
 function fetchMessages() {
-    // Guna google.script.run
-    google.script.run.withSuccessHandler(function(data){
-        messagesContainer.innerHTML = ""; // kosongkan dulu
-        if (data && Array.isArray(data)) {
-            data.forEach(msg => {
-                appendMessage(msg.name, msg.message, msg.timestamp);
-            });
-        }
-    }).getUcapan(); // panggil Apps Script function
+    fetch(scriptURL + "?action=get")
+        .then(res => res.json())
+        .then(data => {
+            messagesContainer.innerHTML = "";
+            if (data && Array.isArray(data.messages)) {
+                data.messages.forEach(msg => appendMessage(msg.name, msg.message, msg.timestamp));
+            }
+        })
+        .catch(err => console.error("Gagal fetch ucapan:", err));
 }
 
-// --- Jalankan fetch bila page load ---
 document.addEventListener("DOMContentLoaded", fetchMessages);
 
-// --- Handler submit form ---
 formUcapan.addEventListener("submit", function(e){
     e.preventDefault();
 
@@ -463,32 +457,23 @@ formUcapan.addEventListener("submit", function(e){
         return;
     }
 
-    // Hantar ke Apps Script
-    google.script.run.withSuccessHandler(function(res){
-        if(res.status === "success"){
-            appendMessage(name, message); // Papar live
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("message", message);
 
-            // Success popup
-            const successMenu = document.getElementById("success-menu");
-            successMenu.innerHTML = "<div class='success-message'><i class='bx bx-check'></i><p>Mesej anda berjaya dihantar!</p></div>";
-            successMenu.classList.add("open");
-            setTimeout(() => {
-                successMenu.classList.remove("open");
-                successMenu.innerHTML = "";
-            }, 5000);
-
-            closeMenu("ucapan-menu"); // tutup modal
-            formUcapan.reset();
-        }
-    }).submitUcapan(name, message); // panggil Apps Script function
+    fetch(scriptURL, { method: "POST", body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                appendMessage(name, message);
+                formUcapan.reset();
+                closeMenu("ucapan-menu");
+            } else {
+                alert("Gagal hantar ucapan, cuba lagi.");
+            }
+        })
+        .catch(err => console.error("Error hantar ucapan:", err));
 });
-
-
-
-
-
-
-
 
 
 
