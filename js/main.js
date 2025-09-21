@@ -413,7 +413,7 @@ const kehadiranBtn = document.getElementById("kehadiran-btn");
 const formUcapan = document.getElementById("form-ucapan");
 const messagesContainer = document.getElementById("messagesContainer");
 
-const scriptURL = "https://script.google.com/macros/s/.../exec"; // Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycbym0JsG30PWXdHdTutVbdGzxALWNIjRj2m702DhLpGGz4V7agwNcKYMSqT5heHTq5ZW/exec"; // Web App URL
 
 function appendMessage(name, message, timestamp = null) {
     const card = document.createElement("div");
