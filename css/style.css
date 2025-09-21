@@ -259,7 +259,7 @@ body {
     position: absolute;
     left: -10px;
     /* Start just off the left edge of the card */
-    background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    background: linear-gradient(to right, #ffffff, #ffb3b3, #ffffff);
     border-radius: 50%;
     /* Rounded shape */
     opacity: 0.5;
@@ -416,6 +416,8 @@ section {
     font-weight: 300;
     font-size: 14px;
     letter-spacing: 1px;
+    max-width: none;       /* jangan lock lebar */
+    white-space: nowrap;   /* paksa semua dalam 1 line */
 }
 
 .card section.info .event-info .one .parent {
@@ -427,8 +429,10 @@ section {
 }
 
 .card section.info .event-info .one .parent p {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 500;
+    max-width: none;       /* jangan lock lebar */
+    white-space: nowrap;   /* paksa semua dalam 1 line */
 }
 
 .card section.info .event-info .two {
@@ -441,9 +445,11 @@ section {
 
 .card section.info .event-info .two p {
     font-family: "Playfair Display", serif;
-    color: darkcyan;
+    color: rgb(126, 0, 0);
     font-weight: 700;
     font-size: 18px;
+    max-width: none;       /* jangan lock lebar */
+    white-space: nowrap;   /* paksa semua dalam 1 line */
 }
 
 .card section.info .event-info .three .title,
@@ -690,7 +696,7 @@ section {
 .card section.info .aturcara .two p:nth-child(2),
 .card section.info .aturcara .three p:nth-child(2),
 .card section.info .aturcara .four p:nth-child(2) {
-    color: darkgrey;
+    color: rgb(0, 0, 0);
 }
 
 
@@ -781,26 +787,26 @@ section {
 }
 
 .card section.info .rsvp .container-message .content p.name {
-    color: darkcyan;
+    color: rgb(139, 0, 0);
     margin-top: 10px;
 }
 
 .card section.info .rsvp .container-message .content p.name::before {
     content: '--';
-    color: grey;
+    color: rgb(0, 0, 0);
     font-size: 0.9em;
     margin-right: 8px;
 }
 
 .card section.info .rsvp .container-message .content p.name::after {
     content: '--';
-    color: grey;
+    color: rgb(0, 0, 0);
     font-size: 16px;
     margin-left: 8px;
 }
 
 .card section.info .rsvp .container-message .content p.message {
-    color: darkgrey;
+    color: rgb(0, 0, 0);
     margin-top: 10px;
     margin-bottom: 10px;
 }
@@ -815,7 +821,7 @@ section {
 }
 
 .card section.info .rsvp .container-message .content-empty p.empty-message {
-    color: darkgray;
+    color: rgb(0, 0, 0);
     text-align: center;
 }
 
@@ -866,7 +872,7 @@ section {
 
 .card section.info .rsvp .beri-ucapan-button button .bx {
     font-size: 16px;
-    color: darkcyan;
+    color: rgb(139, 0, 0);
 }
 
 .card section.info .rsvp .beri-ucapan-button button span {
@@ -889,7 +895,7 @@ section {
 .footer ul.menu {
     max-width: 420px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-    background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    background:#f19898;
     border-radius: 20px 20px 0 0;
     height: 4rem;
     padding: 0 16px;
@@ -923,7 +929,7 @@ section {
     right: 0;
     max-width: 400px;
     margin: 0 auto;
-    background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    background:#f19898;
     box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.2);
     padding: 20px;
     transition: bottom 0.4s;
@@ -1296,6 +1302,28 @@ section {
   opacity: 1;
 }
 
+
+/* Animasi dari bawah */
+.slide:nth-child(3) .couple-img {
+  width: 500px; /* adjust ikut size */
+  opacity: 0;
+  transform: translateY(100px);
+  animation: slideUp 1s ease forwards;
+}
+
+/* Stagger effect kalau nak */
+.slide:nth-child(3) .couple-img:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+/* Keyframes */
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .couple-img {
   position: absolute;
   bottom: 0;       /* Rapat dengan bawah page */
@@ -1306,7 +1334,7 @@ section {
   z-index: 1;
 }
 
-.overlay-names {
+.overlay-names  {
   position: absolute;
   bottom: 55%;  /* Naikkan nama kat atas kepala pengantin sikit */
   left: 50%;
@@ -1331,6 +1359,15 @@ section {
 }
 
 .overlay-names h2 {
+  font-size: 20px;
+  margin: 0.2rem 0;
+  opacity: 0;
+  transform: translateY(-30px);
+  font-family:Georgia, 'Times New Roman', Times, serif ;
+  font-weight: 300;
+}
+
+.overlay-names h3 {
   font-size: 24px;
   margin: 0.2rem 0;
   opacity: 0;

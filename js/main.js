@@ -136,7 +136,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
 });
 
-setupCountdown(".campaign-0", new Date().getMilliseconds(), 1924920000000);
+setupCountdown(
+  ".campaign-0",
+  Date.now(), // start kira dari sekarang
+  new Date("2025-12-20T10:30:00").getTime() // tarikh & masa majlis
+);
 
 
 
