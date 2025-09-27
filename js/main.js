@@ -566,12 +566,12 @@ formUcapan.addEventListener("submit", function(e){
     const message = formUcapan.querySelector("textarea[name='message']").value.trim();
     if (!message) { alert("Sila masukkan ucapan!"); return; }
 
-    const formData = new FormData();
-    formData.append("action","message");
-    formData.append("name", name);
-    formData.append("message", message);
+    const body = new URLSearchParams();
+    body.append("action","message");
+    body.append("name", name);
+    body.append("message", message);
 
-    fetch('/api/api', {method:'POST', body: formData})
+    fetch('/api/api', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body })
         .then(res=>res.json())
         .then(data=>{
             if (data.status==="success"){
@@ -596,7 +596,7 @@ function initAfterDom(){
     if (isAdmin && adminBtn) adminBtn.style.display = '';
 
     // Wire admin actions
-    const adminPost = (action)=> fetch('/api/api', { method:'POST', body: (()=>{const fd=new FormData(); fd.append('action', action); return fd;})() }).then(async r=>{ const t = await r.text(); try { return JSON.parse(t); } catch { throw new Error('Bad JSON: '+t); } });
+    const adminPost = (action)=> fetch('/api/api', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: (new URLSearchParams({action})) }).then(async r=>{ const t = await r.text(); try { return JSON.parse(t); } catch { throw new Error('Bad JSON: '+t); } });
     const btnClearMessages = document.getElementById('btnClearMessages');
     const btnClearRsvp = document.getElementById('btnClearRsvp');
     const btnSeedDemo = document.getElementById('btnSeedDemo');
@@ -656,14 +656,14 @@ if (document.readyState === 'loading') {
 
 
 function incrementRSVP(type){
-    const formData = new FormData();
-    formData.append("action","rsvp");
-    formData.append("type",type);
+    const body = new URLSearchParams();
+    body.append("action","rsvp");
+    body.append("type",type);
     const nameInput = document.getElementById('rsvp-name-input');
     const name = (nameInput?.value || 'Anonymous').trim();
-    formData.append("name", name);
+    body.append("name", name);
 
-    fetch('/api/api',{method:'POST', body: formData})
+    fetch('/api/api',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body})
         .then(res=>res.json())
         .then(data=>{
             if (data && data.rsvp) {
