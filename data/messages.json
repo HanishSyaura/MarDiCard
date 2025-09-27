@@ -1,1 +1,27 @@
-[]
+[
+    {
+        "name": "Ali",
+        "message": "Tahniah! Semoga bahagia hingga ke Jannah.",
+        "timestamp": "2025-09-27T11:59:25+02:00"
+    },
+    {
+        "name": "Siti",
+        "message": "Selamat pengantin baru!",
+        "timestamp": "2025-09-27T12:29:25+02:00"
+    },
+    {
+        "name": "Ravi",
+        "message": "Congratulations and best wishes!",
+        "timestamp": "2025-09-27T12:59:25+02:00"
+    },
+    {
+        "name": "Mei",
+        "message": "Semoga berkekalan hingga ke akhir hayat.",
+        "timestamp": "2025-09-27T12:59:25+02:00"
+    },
+    {
+        "name": "John",
+        "message": "All the best on your special day!",
+        "timestamp": "2025-09-27T12:59:25+02:00"
+    }
+]

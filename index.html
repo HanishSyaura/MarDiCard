@@ -9,6 +9,37 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <title>Raikan Cinta 20 Disember 2025</title>
+    <style>
+      /* Footer reveals only at bottom */
+      .footer.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; transition: transform .4s ease, opacity .4s ease; }
+      .footer.visible { transform: translateY(0); opacity: 1; }
+
+      /* Message card entry animation */
+      .message-card { opacity: 0; animation: cardIn 600ms ease forwards; }
+      @keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+      /* Gentle float for post-slide image presence */
+      @keyframes softFloat { from { transform: translateY(0) scale(1); } to { transform: translateY(-6px) scale(1.02); } }
+
+      /* Pagination styling */
+      .messages-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0 10px; }
+      .messages-pagination button { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; background: #fffdf8; cursor: pointer; }
+      .messages-pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .messages-pagination #messagesPageInfo { color: #333; font-weight: 600; }
+
+      /* Admin buttons feedback */
+      .admin-btn { padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; background:#fffdf8; cursor:pointer; transition: transform .06s ease, opacity .2s ease; }
+      .admin-btn:hover { opacity: .9; }
+      .admin-btn:active { transform: scale(0.98); }
+      .admin-btn[disabled] { opacity: .6; cursor: not-allowed; }
+      .admin-btn.loading { position: relative; color: transparent !important; }
+      .admin-btn.loading::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: 14px; height: 14px; margin-left:-7px; margin-top:-7px; border-radius:50%; border: 2px solid #aaa; border-top-color:#333; animation: spin .8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Toast */
+      .toast { position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 1200; opacity: 0; animation: toastIn .2s ease forwards; }
+      @keyframes toastIn { to { opacity: 1; } }
+    </style>
 </head>
 
 <body>
@@ -71,9 +102,9 @@
                 <div class="slide">
                     <div class="overlay-names">
                         <p class="walimatul">Walimatul urus</p>
-                        <h3 class="firstName">Waie ❤️ Husna</h2>
+                        <h3 class="firstName">Waie ❤️ Husna</h3>
                         <p class="n">&</p>
-                        <h3 class="secondName">Hanish ❤️ Najib</h2>
+                        <h3 class="secondName">Hanish ❤️ Najib</h3>
                     </div>
                     <img src="./images/BrideGroomLooking.png" class="couple-img" />
                 </div>
@@ -161,20 +192,12 @@
                     <p>10:30 Pagi</p>
                 </div>
                 <div class="two">
-                    <p>Ketibaan Pengantin Waie dan Husna</p>
-                    <p>11:00 Pagi</p>
-                </div>
-                <div class="three">
-                    <p>Makan Beradab</p>
-                    <p>12:00 Petang</p>
+                    <p>Pengantin Waie dan Husna berarak masuk</p>
+                    <p>12:00 Pagi</p>
                 </div>
                 <div class="two">
-                    <p>Ketibaan Pengantin Hanish dan Najib</p>
-                    <p>1:00 Petang</p>
-                </div>
-                <div class="three">
-                    <p>Makan Beradab</p>
-                    <p>2:00 Petang</p>
+                    <p>Pengantin Hanish dan Najib berarak masuk</p>
+                    <p>12:30 Petang</p>
                 </div>
                 <div class="four">
                     <p>Majlis Bersurai</p>
@@ -185,13 +208,15 @@
                 <div class="container">
                     <img src="./images/ucapan-bg.png" alt="">
                     <div class="content">
-                        <p>Ya Allah, berkatilah majlis perkahwinan ini, limpahkan baraqah dan rahmat kepada kedua
-                            mempelai ini,
-                            Kurniakanlah mereka
-                            zuriat yang soleh dan solehah. Kekalkanlah jodoh mereka di dunia dan di akhirat dan
-                            sempurnakanlah
-                            agama mereka dengan
-                            berkat ikatan ini.</p>
+                        <p>Ya Allah,<br>satukanlah hati kedua mempelai ini dalam kebaikan,<br>
+                            berkatilah perkahwinan mereka dengan<br>kasih sayang yang suci,<br>
+                            jadikanlah rumah tangga mereka<br>sakinah, mawaddah, wa rahmah.
+                        </p>
+                        <p>
+                            Kurniakanlah rezeki yang melimpah,<br>
+                            zuriat yang soleh dan solehah,<br>
+                            serta kebahagiaan yang berkekalan hingga ke Jannah. 💍✨
+                        </p>
                     </div>
                 </div>
             </div>
@@ -200,6 +225,11 @@
                 <h2 class="reveal fade-bottom">Ucapan</h2>
                 <div class="container-message reveal fade-bottom" id="messagesContainer">
                     
+                </div>
+                <div id="messagesPagination" class="messages-pagination reveal fade-bottom">
+                    <button id="messagesPrev">Sebelumnya</button>
+                    <span id="messagesPageInfo">Halaman 1</span>
+                    <button id="messagesNext">Seterusnya</button>
                 </div>
                 <div class="beri-ucapan-button reveal fade-bottom">
                     <button id="kehadiran-btn">
@@ -220,6 +250,7 @@
                 <li id="music-btn"><i class='bx bx-music'></i></li>
                 <li id="rsvp-btn"><i class='bx bx-envelope'></i></li>
                 <li id="contact-btn"><i class='bx bx-phone'></i></li>
+                <li id="admin-btn" style="display:none"><i class='bx bx-cog'></i></li>
             </ul>
         </section>
     </div>
@@ -280,6 +311,14 @@
     <div id="rsvp-menu" class="toggle-menu">
         <div class="rsvp">
             <h1>Kehadiran</h1>
+            <div class="counts">
+                <p>Hadir: <span id="rsvp-attend-count">0</span></p>
+                <p>Tidak Hadir: <span id="rsvp-not-attend-count">0</span></p>
+            </div>
+            <div class="rsvp-name" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                <label for="rsvp-name-input" style="color:white;">Nama</label>
+                <input id="rsvp-name-input" type="text" placeholder="Nama anda" style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid #ccc;">
+            </div>
             <div class="button">
                 <button type="button" id="btn-hadir">
                     <i class='bx bx-check'></i>
@@ -289,6 +328,26 @@
                     <i class='bx bx-x'></i>
                     <span>Tidak Hadir</span>
                 </button>
+            </div>
+            <div id="rsvpListContainer" class="reveal fade-bottom" style="width:100%; max-width:380px; margin-top:10px;">
+                <h2 style="color:white; font-size:18px; margin-bottom:6px;">Senarai Respon</h2>
+                <ul id="rsvpList" style="list-style:none; padding-left:0; margin:0;"></ul>
+                <div id="rsvpPagination" class="messages-pagination" style="margin-top:10px;">
+                    <button id="rsvpPrev">Sebelumnya</button>
+                    <span id="rsvpPageInfo">Halaman 1</span>
+                    <button id="rsvpNext">Seterusnya</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-menu" class="toggle-menu">
+        <div class="admin">
+            <h1>Admin</h1>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+                <button id="btnClearMessages" class="admin-btn">Clear Ucapan</button>
+                <button id="btnClearRsvp" class="admin-btn">Clear RSVP</button>
+                <button id="btnSeedDemo" class="admin-btn">Seed Demo Data</button>
             </div>
         </div>
     </div>

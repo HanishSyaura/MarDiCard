@@ -731,6 +731,7 @@ section {
     font-family: 'Cormorant Garamond', serif;
     margin: 0;
     text-align: center;
+    line-height: 120%;
 }
 
 .card section.info .ucapan img {
@@ -889,7 +890,7 @@ section {
     position: fixed;
     bottom: 0;
     left: 0;
-    z-index: 1000;
+    z-index: 1100; /* Keep navbar above any bottom sheets */
 }
 
 .footer ul.menu {
@@ -932,13 +933,14 @@ section {
     background:#f19898;
     box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.2);
     padding: 20px;
+    padding-bottom: calc(20px + 4.5rem); /* keep content above the navbar */
     transition: bottom 0.4s;
     z-index: 1000;
     border-radius: 10px;
 }
 
 .toggle-menu.open {
-    bottom: 10%;
+    bottom: 4.5rem; /* sit just above the 4rem navbar */
 }
 
 .toggle-menu h1 {

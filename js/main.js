@@ -11,42 +11,64 @@
 //    audioPlayer.play();  // Start playing the audio
 // });
 
+let autoScrollRafId = null;
+let autoScrollPausedUntil = 0;
+function pauseAutoScroll(ms=3000){ autoScrollPausedUntil = performance.now() + ms; }
+['wheel','touchstart','touchmove','keydown'].forEach(evt=>{
+  window.addEventListener(evt, ()=>pauseAutoScroll(3000), {passive:true});
+});
+
+function startAutoScroll(){
+    if (autoScrollRafId) { cancelAnimationFrame(autoScrollRafId); autoScrollRafId = null; }
+    const speedPxPerSec = 33; // previous speed (~33 px/s)
+    let lastTs = null;
+    const step = (ts)=>{
+        if (lastTs == null) lastTs = ts;
+        const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 1;
+        if (atBottom) { revealFooterIfBottom(); autoScrollRafId = null; return; }
+        if (ts >= autoScrollPausedUntil) {
+            const dt = Math.min(100, ts - lastTs); // cap dt to avoid jumps
+            const dy = (speedPxPerSec * dt) / 1000;
+            window.scrollTo({ top: window.scrollY + dy, left: 0, behavior: 'auto' });
+        }
+        lastTs = ts;
+        autoScrollRafId = requestAnimationFrame(step);
+    };
+    autoScrollRafId = requestAnimationFrame(step);
+}
+
 document.getElementById("toggle-content").addEventListener("click", function () {
-    var wrapper = document.querySelector(".wrapper"); // Change to wrapper
+    var wrapper = document.querySelector(".wrapper");
     var card = document.querySelector(".card");
 
-    // Add the 'hidden' class to start the fade out transition
     wrapper.classList.add("hidden");
 
-    // Wait for the transition to complete
     wrapper.addEventListener("transitionend", function () {
-        // After fade out is complete, hide the wrapper and show the card
-        wrapper.style.display = "none"; // Hide the wrapper
-        card.style.display = "block";   // Show the card
+        wrapper.style.display = "none";
+        card.style.display = "block";
+        // Start slideshow now that the overlay is gone; auto-scroll when slideshow finishes
+        startSlideshow(() => setTimeout(startAutoScroll, 400));
     }, { once: true });
 
-    // Play the audio
     const audioPlayer = document.getElementById("audio-player");
-    audioPlayer.play();  // Start playing the audio
+    audioPlayer.play();
 });
 
 document.getElementById("toggle-content1").addEventListener("click", function () {
-    var wrapper = document.querySelector(".wrapper"); // Change to wrapper
+    var wrapper = document.querySelector(".wrapper");
     var card = document.querySelector(".card");
 
-    // Add the 'hidden' class to start the fade out transition
     wrapper.classList.add("hidden");
 
-    // Wait for the transition to complete
     wrapper.addEventListener("transitionend", function () {
-        // After fade out is complete, hide the wrapper and show the card
-        wrapper.style.display = "none"; // Hide the wrapper
-        card.style.display = "block";   // Show the card
+        wrapper.style.display = "none";
+        card.style.display = "block";
+        // Start slideshow now that the overlay is gone; auto-scroll when slideshow finishes
+        startSlideshow(() => setTimeout(startAutoScroll, 400));
     }, { once: true });
 
-    // Play the audio
     const audioPlayer = document.getElementById("audio-player");
-    audioPlayer.play();  // Start playing the audio
+    audioPlayer.play();
 });
 
 function randomizeButterflies() {
@@ -342,9 +364,9 @@ const toggleButtons = {
     'rsvp-btn': 'rsvp-menu',
     'ucapan-btn': 'ucapan-menu',
     'contact-btn': 'contact-menu',
-    'kehadiran-btn': 'rsvp-menu',
-    'btn-hadir': 'success-menu'
-    // Add other button-to-menu mappings here
+    'admin-btn': 'admin-menu',
+    'kehadiran-btn': 'rsvp-menu'
+    // Success menu will be opened programmatically after RSVP succeeds
 };
 
 // Function to toggle a menu open/close
@@ -374,7 +396,7 @@ function closeAllMenus() {
 // Add click event listeners to all toggle buttons
 for (const [buttonId, menuId] of Object.entries(toggleButtons)) {
     const button = document.getElementById(buttonId);
-    button.addEventListener('click', (event) => toggleMenu(menuId, event));
+    if (button) button.addEventListener('click', (event) => toggleMenu(menuId, event));
 }
 
 // Add a global click handler to close all menus when clicking outside
@@ -383,7 +405,7 @@ document.addEventListener('click', () => closeAllMenus());
 // Prevent clicks within menus from closing them
 for (const menuId of Object.values(toggleButtons)) {
     const menu = document.getElementById(menuId);
-    menu.addEventListener('click', (event) => event.stopPropagation());
+    if (menu) menu.addEventListener('click', (event) => event.stopPropagation());
 }
 
 // Function to close a specific menu
@@ -413,85 +435,255 @@ const kehadiranBtn = document.getElementById("kehadiran-btn");
 const formUcapan = document.getElementById("form-ucapan");
 const messagesContainer = document.getElementById("messagesContainer");
 
-function appendMessage(name, message, timestamp) {
+function appendMessage(name, message, timestamp){
     const card = document.createElement("div");
     card.classList.add("message-card");
-    card.innerHTML = `
-        <div class="message-header">
-            <strong>${name}</strong> <span class="timestamp">${timestamp}</span>
-        </div>
-        <p>${message}</p>
-    `;
+
+    const header = document.createElement("div");
+    header.classList.add("message-header");
+
+    const strong = document.createElement("strong");
+    strong.textContent = name;
+
+    const ts = document.createElement("span");
+    ts.classList.add("timestamp");
+    // Show local time if ISO provided
+    try {
+        const d = new Date(timestamp);
+        ts.textContent = isNaN(d.getTime()) ? String(timestamp || "") : d.toLocaleString();
+    } catch (_) {
+        ts.textContent = String(timestamp || "");
+    }
+
+    header.appendChild(strong);
+    header.appendChild(document.createTextNode(" "));
+    header.appendChild(ts);
+
+    const p = document.createElement("p");
+    p.textContent = message; // safe text insertion
+
+    card.appendChild(header);
+    card.appendChild(p);
+
     messagesContainer.prepend(card);
 }
 
-function fetchMessages() {
-    fetch('php/messages.php')
-        .then(res => res.json())
-        .then(data => {
-            messagesContainer.innerHTML = "";
-            if (data.messages && Array.isArray(data.messages)) {
-                data.messages.forEach(msg => appendMessage(msg.name, msg.message, msg.timestamp));
-            }
-        })
-        .catch(err => console.error(err));
+function updateRSVPCounts(attend, not_attend){
+    const a = document.getElementById("rsvp-attend-count");
+    const n = document.getElementById("rsvp-not-attend-count");
+    if (a) a.textContent = String(attend ?? 0);
+    if (n) n.textContent = String(not_attend ?? 0);
 }
 
-document.addEventListener("DOMContentLoaded", fetchMessages);
+let allMessages = [];
+let messagesPage = 1;
+const messagesPageSize = 10;
+const messagesPrevBtn = document.getElementById('messagesPrev');
+const messagesNextBtn = document.getElementById('messagesNext');
+const messagesPageInfo = document.getElementById('messagesPageInfo');
+
+// RSVP pagination state
+let rsvpEntries = [];
+let rsvpPage = 1;
+const rsvpPageSize = 10;
+const rsvpPrevBtn = document.getElementById('rsvpPrev');
+const rsvpNextBtn = document.getElementById('rsvpNext');
+const rsvpPageInfo = document.getElementById('rsvpPageInfo');
+const rsvpListEl = document.getElementById('rsvpList');
+
+function renderRsvpPage(page){
+    if (!rsvpListEl) return;
+    const totalPages = Math.max(1, Math.ceil(rsvpEntries.length / rsvpPageSize));
+    rsvpPage = Math.min(Math.max(1, page), totalPages);
+    rsvpListEl.innerHTML = '';
+    const start = (rsvpPage - 1) * rsvpPageSize;
+    const end = start + rsvpPageSize;
+    rsvpEntries.slice(start, end).forEach(item => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.padding = '6px 8px';
+        li.style.background = 'rgba(255,255,255,0.2)';
+        li.style.borderRadius = '6px';
+        li.style.marginBottom = '6px';
+        const left = document.createElement('span');
+        left.textContent = item.name || 'Anonymous';
+        const right = document.createElement('span');
+        right.textContent = (item.type === 'attend' ? 'Hadir' : 'Tidak Hadir');
+        right.style.fontWeight = '700';
+        right.style.color = item.type === 'attend' ? 'lightgreen' : '#ffd1d1';
+        li.appendChild(left);
+        li.appendChild(right);
+        rsvpListEl.appendChild(li);
+    });
+    if (rsvpPageInfo) rsvpPageInfo.textContent = `Halaman ${rsvpPage}/${totalPages}`;
+    if (rsvpPrevBtn) rsvpPrevBtn.disabled = rsvpPage <= 1;
+    if (rsvpNextBtn) rsvpNextBtn.disabled = rsvpPage >= totalPages;
+}
+
+if (rsvpPrevBtn) rsvpPrevBtn.addEventListener('click', ()=>renderRsvpPage(rsvpPage-1));
+if (rsvpNextBtn) rsvpNextBtn.addEventListener('click', ()=>renderRsvpPage(rsvpPage+1));
+
+function renderMessagesPage(page){
+    const totalPages = Math.max(1, Math.ceil(allMessages.length / messagesPageSize));
+    messagesPage = Math.min(Math.max(1, page), totalPages);
+    messagesContainer.innerHTML = "";
+    const start = (messagesPage - 1) * messagesPageSize;
+    const end = start + messagesPageSize;
+    allMessages.slice(start, end).forEach(m => appendMessage(m.name, m.message, m.timestamp));
+    if (messagesPageInfo) messagesPageInfo.textContent = `Halaman ${messagesPage}/${totalPages}`;
+    if (messagesPrevBtn) messagesPrevBtn.disabled = messagesPage <= 1;
+    if (messagesNextBtn) messagesNextBtn.disabled = messagesPage >= totalPages;
+}
+
+if (messagesPrevBtn) messagesPrevBtn.addEventListener('click', ()=>renderMessagesPage(messagesPage-1));
+if (messagesNextBtn) messagesNextBtn.addEventListener('click', ()=>renderMessagesPage(messagesPage+1));
+
+function fetchMessages(){
+    fetch('/api/api')
+        .then(res=>res.json())
+        .then(data=>{
+            if (data && Array.isArray(data.messages)) {
+                allMessages = data.messages;
+                renderMessagesPage(messagesPage);
+            }
+            if (data && data.rsvp) {
+                updateRSVPCounts(data.rsvp.attend, data.rsvp.not_attend);
+                if (Array.isArray(data.rsvp.entries)) {
+                    rsvpEntries = data.rsvp.entries;
+                    renderRsvpPage(rsvpPage);
+                }
+            }
+        })
+        .catch(err=>console.error(err));
+}
+
+
 
 formUcapan.addEventListener("submit", function(e){
     e.preventDefault();
-    const name = formUcapan.querySelector("input[name='name']").value || "Anonymous";
+    const name = (formUcapan.querySelector("input[name='name']").value || "Anonymous").trim();
     const message = formUcapan.querySelector("textarea[name='message']").value.trim();
-
-    if (!message) {
-        alert("Sila masukkan ucapan anda!");
-        return;
-    }
+    if (!message) { alert("Sila masukkan ucapan!"); return; }
 
     const formData = new FormData();
+    formData.append("action","message");
     formData.append("name", name);
     formData.append("message", message);
 
-    fetch('php/messages.php', { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
-                appendMessage(name, message, new Date().toLocaleTimeString());
+    fetch('/api/api', {method:'POST', body: formData})
+        .then(res=>res.json())
+        .then(data=>{
+            if (data.status==="success"){
+                // Prepend to in-memory list and jump to first page
+                allMessages.unshift({name, message, timestamp: data.entry?.timestamp || new Date().toISOString()});
                 formUcapan.reset();
                 closeMenu("ucapan-menu");
-            } else {
-                alert(data.message || "Gagal hantar ucapan");
-            }
+                renderMessagesPage(1);
+            } else alert(data.message || "Gagal hantar ucapan");
         })
-        .catch(err => console.error(err));
+        .catch(err=>console.error(err));
 });
 
-// RSVP
-function incrementRSVP(type) {
-    const formData = new FormData();
-    formData.append("action", "increment");
-    formData.append("type", type);
+function initAfterDom(){
+    // Hide footer until bottom
+    const footer = document.querySelector('.footer');
+    if (footer) { footer.classList.add('hidden'); footer.classList.remove('visible'); }
 
-    fetch('php/rsvp.php', { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert("Error: " + data.error);
-            } else {
-                const successMenu = document.getElementById("success-menu");
-                if (type === "attend") {
-                    successMenu.innerHTML = "<p>Kami menantikan kedatangan anda!</p>";
-                } else {
-                    successMenu.innerHTML = "<p>Maaf, mungkin lain kali.</p>";
-                }
-                successMenu.classList.add("open");
-            }
-        });
+    // Admin panel toggle via ?admin=1
+    const isAdmin = new URLSearchParams(location.search).get('admin') === '1';
+    const adminBtn = document.getElementById('admin-btn');
+    if (isAdmin && adminBtn) adminBtn.style.display = '';
+
+    // Wire admin actions
+    const adminPost = (action)=> fetch('/api/api', { method:'POST', body: (()=>{const fd=new FormData(); fd.append('action', action); return fd;})() }).then(async r=>{ const t = await r.text(); try { return JSON.parse(t); } catch { throw new Error('Bad JSON: '+t); } });
+    const btnClearMessages = document.getElementById('btnClearMessages');
+    const btnClearRsvp = document.getElementById('btnClearRsvp');
+    const btnSeedDemo = document.getElementById('btnSeedDemo');
+    const showToast = (msg)=>{
+        let el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(), 300); }, 1500);
+    };
+    const withBusy = async (btn, fn) => { if (!btn) return; const orig = btn.textContent; btn.disabled = true; btn.classList.add('loading'); try { await fn(); } catch(e){ console.error(e); showToast('Operation failed'); } finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = orig; } };
+
+    if (btnClearMessages) btnClearMessages.addEventListener('click', ()=>withBusy(btnClearMessages, async ()=>{
+        const data = await adminPost('clear_messages');
+        allMessages = [];
+        renderMessagesPage(1);
+        showToast('Ucapan cleared');
+        // final sync
+        await fetchMessages();
+    }));
+
+    if (btnClearRsvp) btnClearRsvp.addEventListener('click', ()=>withBusy(btnClearRsvp, async ()=>{
+        const data = await adminPost('clear_rsvp');
+        updateRSVPCounts(0,0);
+        rsvpEntries = [];
+        renderRsvpPage(1);
+        showToast('RSVP cleared');
+        // final sync
+        await fetchMessages();
+    }));
+
+    if (btnSeedDemo) btnSeedDemo.addEventListener('click', ()=>withBusy(btnSeedDemo, async ()=>{
+        const data = await adminPost('seed_demo');
+        if (data && Array.isArray(data.messages)) { allMessages = data.messages; renderMessagesPage(1); }
+        if (data && data.rsvp) { updateRSVPCounts(data.rsvp.attend, data.rsvp.not_attend); rsvpEntries = data.rsvp.entries || []; renderRsvpPage(1); }
+        showToast('Demo data seeded');
+        // final sync
+        await fetchMessages();
+    }));
+
+    // Ensure all menus are closed on load
+    closeAllMenus();
+
+    fetchMessages();
+    setInterval(fetchMessages, 7000); // auto-refresh every 7s
+
+    // Footer reveal on manual scroll
+    window.addEventListener('scroll', revealFooterIfBottom);
 }
 
-document.getElementById("btn-hadir").addEventListener("click", () => incrementRSVP("attend"));
-document.getElementById("btn-tidak-hadir").addEventListener("click", () => incrementRSVP("not_attend"));
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAfterDom);
+} else {
+  // DOM already parsed
+  initAfterDom();
+}
+
+
+function incrementRSVP(type){
+    const formData = new FormData();
+    formData.append("action","rsvp");
+    formData.append("type",type);
+    const nameInput = document.getElementById('rsvp-name-input');
+    const name = (nameInput?.value || 'Anonymous').trim();
+    formData.append("name", name);
+
+    fetch('/api/api',{method:'POST', body: formData})
+        .then(res=>res.json())
+        .then(data=>{
+            if (data && data.rsvp) {
+                updateRSVPCounts(data.rsvp.attend, data.rsvp.not_attend);
+                if (Array.isArray(data.rsvp.entries)) {
+                    rsvpEntries = data.rsvp.entries;
+                    renderRsvpPage(rsvpPage);
+                }
+            }
+            const successMenu = document.getElementById("success-menu");
+            if(type==="attend") successMenu.innerHTML="<p>Kami menantikan kedatangan anda!</p>";
+            else successMenu.innerHTML="<p>Maaf, mungkin lain kali.</p>";
+            successMenu.classList.add("open");
+        })
+        .catch(err=>console.error(err));
+}
+
+document.getElementById("btn-hadir").addEventListener("click",()=>incrementRSVP("attend"));
+document.getElementById("btn-tidak-hadir").addEventListener("click",()=>incrementRSVP("not_attend"));
+
 
 
 
@@ -525,7 +717,8 @@ function showSlide(index) {
   // gambar dulu
   if (img) {
     setTimeout(() => {
-      img.style.animation = 'slideIn 1.5s ease forwards';
+      // Entry + gentle float afterwards
+      img.style.animation = 'slideIn 1.5s ease forwards, softFloat 12s ease-in-out 2s infinite alternate';
     }, 500);
   }
 
@@ -552,7 +745,42 @@ function nextSlide() {
   }
 }
 
-// start
-showSlide(0);
-setTimeout(nextSlide, 10000);
+// Slideshow will start after overlay is dismissed
+let slideshowStarted = false;
+let slideTimeoutId = null;
+let onSlideshowComplete = null;
+
+// Footer reveal helper
+function revealFooterIfBottom(){
+  const footer = document.querySelector('.footer');
+  const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 1;
+  if (atBottom && footer) {
+    footer.classList.remove('hidden');
+    footer.classList.add('visible');
+  }
+}
+
+function scheduleNextSlide() {
+  if (current < slides.length - 1) {
+    slideTimeoutId = setTimeout(() => {
+      current++;
+      showSlide(current);
+      scheduleNextSlide();
+    }, 10000);
+  } else {
+    // Finished full cycle
+    if (typeof onSlideshowComplete === 'function') {
+      onSlideshowComplete();
+    }
+  }
+}
+
+function startSlideshow(callbackWhenDone) {
+  if (slideshowStarted) return;
+  slideshowStarted = true;
+  onSlideshowComplete = callbackWhenDone;
+  current = 0;
+  showSlide(0);
+  scheduleNextSlide();
+}
 
