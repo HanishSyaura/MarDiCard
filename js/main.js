@@ -539,6 +539,18 @@ function renderMessagesPage(page){
 if (messagesPrevBtn) messagesPrevBtn.addEventListener('click', ()=>renderMessagesPage(messagesPage-1));
 if (messagesNextBtn) messagesNextBtn.addEventListener('click', ()=>renderMessagesPage(messagesPage+1));
 
+// Global toast helper so it can be used by any handler
+function showToast(msg, durationMs = 5000) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+    }, durationMs);
+}
+
 function fetchMessages(){
     fetch('/api/api')
         .then(res=>res.json())
@@ -601,13 +613,6 @@ function initAfterDom(){
     const btnClearMessages = document.getElementById('btnClearMessages');
     const btnClearRsvp = document.getElementById('btnClearRsvp');
     const btnSeedDemo = document.getElementById('btnSeedDemo');
-    const showToast = (msg, durationMs = 5000)=>{
-        let el = document.createElement('div');
-        el.className = 'toast';
-        el.textContent = msg;
-        document.body.appendChild(el);
-        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(), 300); }, durationMs);
-    };
     const withBusy = async (btn, fn) => { if (!btn) return; const orig = btn.textContent; btn.disabled = true; btn.classList.add('loading'); try { await fn(); } catch(e){ console.error(e); showToast('Operation failed', 1500); } finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = orig; } };
 
     if (btnClearMessages) btnClearMessages.addEventListener('click', ()=>withBusy(btnClearMessages, async ()=>{
