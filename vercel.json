@@ -2,7 +2,6 @@
   "version": 2,
   "functions": {
     "api/api.js": {
-      "runtime": "nodejs20.x",
       "maxDuration": 10
     }
   },
@@ -10,4 +9,5 @@
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
+}
 }

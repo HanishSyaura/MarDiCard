@@ -163,3 +163,8 @@ module.exports = async (req, res) => {
   }
   jsonResponse(res, 405, { status: 'error', message: 'Method not allowed' });
 };
+
+// Inline function config to avoid specifying runtime in vercel.json
+module.exports.config = {
+  maxDuration: 10
+};
