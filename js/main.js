@@ -580,6 +580,7 @@ formUcapan.addEventListener("submit", function(e){
                 formUcapan.reset();
                 closeMenu("ucapan-menu");
                 renderMessagesPage(1);
+                showToast('Ucapan dihantar. Terima kasih!', 3000);
             } else alert(data.message || "Gagal hantar ucapan");
         })
         .catch(err=>console.error(err));
@@ -600,20 +601,20 @@ function initAfterDom(){
     const btnClearMessages = document.getElementById('btnClearMessages');
     const btnClearRsvp = document.getElementById('btnClearRsvp');
     const btnSeedDemo = document.getElementById('btnSeedDemo');
-    const showToast = (msg)=>{
+    const showToast = (msg, durationMs = 5000)=>{
         let el = document.createElement('div');
         el.className = 'toast';
         el.textContent = msg;
         document.body.appendChild(el);
-        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(), 300); }, 1500);
+        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(), 300); }, durationMs);
     };
-    const withBusy = async (btn, fn) => { if (!btn) return; const orig = btn.textContent; btn.disabled = true; btn.classList.add('loading'); try { await fn(); } catch(e){ console.error(e); showToast('Operation failed'); } finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = orig; } };
+    const withBusy = async (btn, fn) => { if (!btn) return; const orig = btn.textContent; btn.disabled = true; btn.classList.add('loading'); try { await fn(); } catch(e){ console.error(e); showToast('Operation failed', 1500); } finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = orig; } };
 
     if (btnClearMessages) btnClearMessages.addEventListener('click', ()=>withBusy(btnClearMessages, async ()=>{
         const data = await adminPost('clear_messages');
         allMessages = [];
         renderMessagesPage(1);
-        showToast('Ucapan cleared');
+        showToast('Ucapan cleared', 1500);
         // final sync
         await fetchMessages();
     }));
@@ -623,7 +624,7 @@ function initAfterDom(){
         updateRSVPCounts(0,0);
         rsvpEntries = [];
         renderRsvpPage(1);
-        showToast('RSVP cleared');
+        showToast('RSVP cleared', 1500);
         // final sync
         await fetchMessages();
     }));
@@ -632,7 +633,7 @@ function initAfterDom(){
         const data = await adminPost('seed_demo');
         if (data && Array.isArray(data.messages)) { allMessages = data.messages; renderMessagesPage(1); }
         if (data && data.rsvp) { updateRSVPCounts(data.rsvp.attend, data.rsvp.not_attend); rsvpEntries = data.rsvp.entries || []; renderRsvpPage(1); }
-        showToast('Demo data seeded');
+        showToast('Demo data seeded', 1500);
         // final sync
         await fetchMessages();
     }));
@@ -675,8 +676,9 @@ function incrementRSVP(type){
             }
             const successMenu = document.getElementById("success-menu");
             if(type==="attend") successMenu.innerHTML="<p>Kami menantikan kedatangan anda!</p>";
-            else successMenu.innerHTML="<p>Maaf, mungkin lain kali.</p>";
+            else successMenu.innerHTML="<p>Semoga berjumpa di lain hari!</p>";
             successMenu.classList.add("open");
+            setTimeout(()=>{ successMenu.classList.remove('open'); successMenu.innerHTML=''; }, 3000);
         })
         .catch(err=>console.error(err));
 }
