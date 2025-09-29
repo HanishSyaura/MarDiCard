@@ -13,6 +13,7 @@
 
 let autoScrollRafId = null;
 let autoScrollPausedUntil = 0;
+let iosAutoScrollIntervalId = null;
 function pauseAutoScroll(ms=3000){ autoScrollPausedUntil = performance.now() + ms; }
 ['wheel','touchstart','touchmove','keydown'].forEach(evt=>{
   window.addEventListener(evt, ()=>pauseAutoScroll(3000), {passive:true});
@@ -45,11 +46,34 @@ function isIOS(){
   return iOSDevice || iPadOS13Plus;
 }
 
-// iOS-specific autoscroll wrapper (kept separate for Safari quirks if needed later)
+// iOS-specific autoscroll wrapper (interval-based for Safari compatibility)
 function startIOSAutoScroll(){
-  // For now, delegate to the existing autoscroll.
-  // If needed, replace with setInterval-based scrolling for older iOS Safari.
-  startAutoScroll();
+  // Ensure any existing Android rAF scroller is stopped
+  if (autoScrollRafId) { cancelAnimationFrame(autoScrollRafId); autoScrollRafId = null; }
+  // Stop previous iOS interval if running
+  if (iosAutoScrollIntervalId) { clearInterval(iosAutoScrollIntervalId); iosAutoScrollIntervalId = null; }
+
+  const speedPxPerSec = 33; // same as Android
+  let lastTs = performance.now();
+
+  iosAutoScrollIntervalId = setInterval(() => {
+    const ts = performance.now();
+    const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 1;
+    if (atBottom) {
+      revealFooterIfBottom();
+      clearInterval(iosAutoScrollIntervalId);
+      iosAutoScrollIntervalId = null;
+      return;
+    }
+
+    if (ts >= autoScrollPausedUntil) {
+      const dt = Math.min(100, ts - lastTs); // cap dt to avoid jumps
+      const dy = (speedPxPerSec * dt) / 1000;
+      // Use scrollBy for better iOS compatibility
+      window.scrollBy(0, dy);
+    }
+    lastTs = ts;
+  }, 16);
 }
 
 document.getElementById("toggle-content").addEventListener("click", function () {
