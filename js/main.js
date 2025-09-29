@@ -14,6 +14,7 @@
 let autoScrollRafId = null;
 let autoScrollPausedUntil = 0;
 let iosAutoScrollIntervalId = null;
+let iosAutoScrollRafId = null;
 function pauseAutoScroll(ms=3000){ autoScrollPausedUntil = performance.now() + ms; }
 ['wheel','touchstart','touchmove','keydown'].forEach(evt=>{
   window.addEventListener(evt, ()=>pauseAutoScroll(3000), {passive:true});
@@ -30,7 +31,7 @@ function startAutoScroll(){
         if (ts >= autoScrollPausedUntil) {
             const dt = Math.min(100, ts - lastTs); // cap dt to avoid jumps
             const dy = (speedPxPerSec * dt) / 1000;
-            window.scrollTo({ top: window.scrollY + dy, left: 0, behavior: 'auto' });
+            window.scrollBy(0, dy);
         }
         lastTs = ts;
         autoScrollRafId = requestAnimationFrame(step);
@@ -46,34 +47,40 @@ function isIOS(){
   return iOSDevice || iPadOS13Plus;
 }
 
-// iOS-specific autoscroll wrapper (interval-based for Safari compatibility)
+// iOS-specific autoscroll wrapper (RAF-based for smoother Safari scrolling)
 function startIOSAutoScroll(){
   // Ensure any existing Android rAF scroller is stopped
   if (autoScrollRafId) { cancelAnimationFrame(autoScrollRafId); autoScrollRafId = null; }
-  // Stop previous iOS interval if running
+  // Stop and clear any previous iOS timers/RAF
   if (iosAutoScrollIntervalId) { clearInterval(iosAutoScrollIntervalId); iosAutoScrollIntervalId = null; }
+  if (iosAutoScrollRafId) { cancelAnimationFrame(iosAutoScrollRafId); iosAutoScrollRafId = null; }
 
-  const speedPxPerSec = 33; // same as Android
-  let lastTs = performance.now();
+  const speedPxPerSec = 33; // keep same speed
+  let lastTs = null;
 
-  iosAutoScrollIntervalId = setInterval(() => {
-    const ts = performance.now();
+  const step = (ts) => {
+    if (lastTs == null) lastTs = ts;
+
     const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 1;
     if (atBottom) {
       revealFooterIfBottom();
-      clearInterval(iosAutoScrollIntervalId);
-      iosAutoScrollIntervalId = null;
+      iosAutoScrollRafId = null;
       return;
     }
 
     if (ts >= autoScrollPausedUntil) {
-      const dt = Math.min(100, ts - lastTs); // cap dt to avoid jumps
+      // Cap delta to avoid big jumps when tab was backgrounded
+      const dt = Math.min(100, ts - lastTs);
       const dy = (speedPxPerSec * dt) / 1000;
-      // Use scrollBy for better iOS compatibility
+      // scrollBy works well on iOS and avoids behavior smooth issues
       window.scrollBy(0, dy);
     }
+
     lastTs = ts;
-  }, 16);
+    iosAutoScrollRafId = requestAnimationFrame(step);
+  };
+
+  iosAutoScrollRafId = requestAnimationFrame(step);
 }
 
 document.getElementById("toggle-content").addEventListener("click", function () {
@@ -842,6 +849,8 @@ function startSlideshow(callbackWhenDone) {
   }
   // Fires for real unloads (closing tab, navigating away). persisted=false means not going to bfcache
   window.addEventListener('pagehide', function(e){ if (!e.persisted) stopAudio(); });
+  // Also pause when tab becomes hidden (Android/Chrome background)
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) stopAudio(); });
   // Fallback for browsers that rely on beforeunload
   window.addEventListener('beforeunload', stopAudio);
 })();
