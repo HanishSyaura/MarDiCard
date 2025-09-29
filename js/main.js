@@ -172,11 +172,11 @@ setupCountdown(
  *  Add to Calendar
   ======================================================= */
 const event = {
-    title: "Jemputan Kenduri Kahwin John & Sarah",
-    startDate: "99991231T033000Z", // YYYYMMDDTHHmmssZ (UTC)
-    endDate: "99991231T090000Z",
-    location: "10A Jalan Seri Ampang 2, Kampung Pisang, 47300 Subang, Selangor, Malaysia",
-    description: "Kami menjemput tuan/puan hadir ke majlis perkahwinan anakanda kami.",
+    title: "Walimatul Urus Waie Hamka & Faridatul Husna serta Hanish Syaura & Najib",
+    startDate: "20251220T023000Z", // 20 Dec 2025 10:30 MYT (UTC+08) -> 02:30 UTC
+    endDate: "20251220T073000Z",   // 20 Dec 2025 15:30 MYT (UTC+08) -> 07:30 UTC
+    location: "9, Jalan Kempas Utama 3/11, Taman Kempas Utama, 81200 Johor Bahru, Johor",
+    description: "Kami menjemput tuan/puan hadir ke majlis perkahwinan: Waie Hamka & Faridatul Husna serta Hanish Syaura & Najib.",
 };
 
 // Function to generate Google Calendar URL
