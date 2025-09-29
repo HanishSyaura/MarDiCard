@@ -830,3 +830,19 @@ function startSlideshow(callbackWhenDone) {
   scheduleNextSlide();
 }
 
+/** =====================================================
+ *  Audio: Stop on Tab Close
+ *  ======================================================= */
+(function attachAudioStopOnClose(){
+  function stopAudio(){
+    var audio = document.getElementById('audio-player');
+    if (audio) {
+      try { audio.pause(); } catch(e) {}
+    }
+  }
+  // Fires for real unloads (closing tab, navigating away). persisted=false means not going to bfcache
+  window.addEventListener('pagehide', function(e){ if (!e.persisted) stopAudio(); });
+  // Fallback for browsers that rely on beforeunload
+  window.addEventListener('beforeunload', stopAudio);
+})();
+
