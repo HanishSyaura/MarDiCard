@@ -37,6 +37,21 @@ function startAutoScroll(){
     autoScrollRafId = requestAnimationFrame(step);
 }
 
+// Minimal iOS detection
+function isIOS(){
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  const iOSDevice = /iPad|iPhone|iPod/.test(ua);
+  const iPadOS13Plus = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return iOSDevice || iPadOS13Plus;
+}
+
+// iOS-specific autoscroll wrapper (kept separate for Safari quirks if needed later)
+function startIOSAutoScroll(){
+  // For now, delegate to the existing autoscroll.
+  // If needed, replace with setInterval-based scrolling for older iOS Safari.
+  startAutoScroll();
+}
+
 document.getElementById("toggle-content").addEventListener("click", function () {
     var wrapper = document.querySelector(".wrapper");
     var card = document.querySelector(".card");
@@ -47,7 +62,7 @@ document.getElementById("toggle-content").addEventListener("click", function () 
         wrapper.style.display = "none";
         card.style.display = "block";
         // Start slideshow now that the overlay is gone; auto-scroll when slideshow finishes
-        startSlideshow(() => setTimeout(startAutoScroll, 400));
+        startSlideshow(() => setTimeout(() => { if (isIOS()) startIOSAutoScroll(); else startAutoScroll(); }, 400));
     }, { once: true });
 
     const audioPlayer = document.getElementById("audio-player");
@@ -64,7 +79,7 @@ document.getElementById("toggle-content1").addEventListener("click", function ()
         wrapper.style.display = "none";
         card.style.display = "block";
         // Start slideshow now that the overlay is gone; auto-scroll when slideshow finishes
-        startSlideshow(() => setTimeout(startAutoScroll, 400));
+        startSlideshow(() => setTimeout(() => { if (isIOS()) startIOSAutoScroll(); else startAutoScroll(); }, 400));
     }, { once: true });
 
     const audioPlayer = document.getElementById("audio-player");
